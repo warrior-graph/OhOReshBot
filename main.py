@@ -20,7 +20,7 @@ from solartime import SolarTime
 from datetime import date, timedelta, datetime
 from timezonefinder import TimezoneFinder
 import locale
-locale.setlocale(locale.LC_ALL, 'pt_br.UTF-8')
+locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
 
 try:
