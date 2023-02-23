@@ -69,16 +69,17 @@ def calculate_solartimes(latitude: float, longitude: float, day: date) -> str:
     sunrise = schedule['sunrise'].astimezone(timezone(str(user_tmz)))
     solar_noon = schedule['noon'].astimezone(timezone(str(user_tmz)))
     sunset = schedule['sunset'].astimezone(timezone(str(user_tmz)))
-    solar_midnight = solar_noon + timedelta(hours=12)
+    solar_midnight = sun.solar_noon_utc(
+        day - timedelta(days=1), longitude).astimezone(timezone(str(user_tmz))) + timedelta(hours=12)
 
     table = pt.PrettyTable(['Momento', 'Horário'])
     table.align['Momento'] = 'l'
     table.align['Horário'] = 'c'
     data = [
+        ('Meia noite', solar_midnight.strftime('%H:%M:%S')),
         ('Nascer do sol', sunrise.strftime('%H:%M:%S')),
         ('Meio dia', solar_noon.strftime('%H:%M:%S')),
         ('Pôr do sol', sunset.strftime('%H:%M:%S')),
-        ('Meia noite', solar_midnight.strftime('%H:%M:%S')),
     ]
     for moment, sched in data:
         table.add_row([moment, sched])
@@ -89,10 +90,9 @@ def calculate_solartimes(latitude: float, longitude: float, day: date) -> str:
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Starts the conversation and asks the user about their gender."""
     await update.message.reply_text(
         "<b><i>Faze o que tu queres há de ser tudo da Lei.</i></b>\n\n"
-        "Olá, bem-vindo ao <b>Oh o RESH!</b>"
+        "Olá, bem-vindo ao <b>Oh o RESH!</b> "
         "Vou te ajudar a calcular os horários "
         "das adorações solares contidas no "
         "<a href=\"https://www.hadnu.org/publicacoes/liber-resh-vel-helios/\">Liber Resh vel Helios</a>\n\n"
@@ -118,7 +118,7 @@ async def how_many(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                                     reply_markup=ReplyKeyboardRemove(),
                                     )
     await update.message.reply_text(
-        "Agora compartilhe sua localização atual. Precisa ser um celular."
+        "Agora compartilhe sua localização atual. Precisa ser um celular. "
         "Basta selecionar o clipe(opção de compartilhar fotos) "
         "e compartilhar a localização atual.",
         reply_markup=ReplyKeyboardRemove(),
@@ -154,7 +154,6 @@ async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def skip_location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Skips the location and asks for info about the user."""
     user = update.message.from_user
     logger.info("Bio of %s: %s", user.first_name, update.message.text)
     await update.message.reply_text("Vamos tentar novamente. Por favor, compartilhe sua localização.")
@@ -181,7 +180,6 @@ def main() -> None:
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(TOKEN).build()
 
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -204,7 +202,6 @@ def main() -> None:
 
     application.add_handler(conv_handler)
 
-    # Run the bot until the user presses Ctrl-C
     application.run_polling()
 
 
